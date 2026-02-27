@@ -94,6 +94,45 @@ function handlePlayerChange() {
 
 function makeAutomaticMove() {
 
+    if (!gameActive) return;
+
+    // 1️⃣ Try to WIN
+    for (let i = 0; i < winningConditions.length; i++) {
+        const [a, b, c] = winningConditions[i];
+
+        if (gameState[a] === "X" && gameState[b] === "X" && gameState[c] === "") {
+            playMove(c);
+            return;
+        }
+        if (gameState[a] === "X" && gameState[c] === "X" && gameState[b] === "") {
+            playMove(b);
+            return;
+        }
+        if (gameState[b] === "X" && gameState[c] === "X" && gameState[a] === "") {
+            playMove(a);
+            return;
+        }
+    }
+
+    // 2️⃣ Block O if about to WIN
+    for (let i = 0; i < winningConditions.length; i++) {
+        const [a, b, c] = winningConditions[i];
+
+        if (gameState[a] === "O" && gameState[b] === "O" && gameState[c] === "") {
+            playMove(c);
+            return;
+        }
+        if (gameState[a] === "O" && gameState[c] === "O" && gameState[b] === "") {
+            playMove(b);
+            return;
+        }
+        if (gameState[b] === "O" && gameState[c] === "O" && gameState[a] === "") {
+            playMove(a);
+            return;
+        }
+    }
+
+    // 3️⃣ Otherwise random move
     let emptyCells = [];
 
     for (let i = 0; i < gameState.length; i++) {
@@ -101,6 +140,19 @@ function makeAutomaticMove() {
             emptyCells.push(i);
         }
     }
+
+    if (emptyCells.length === 0) return;
+
+    let randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    playMove(randomIndex);
+}
+
+// Helper function
+function playMove(index) {
+    let cell = document.querySelector(`[data-cell-index='${index}']`);
+    handleCellPlayed(cell, index);
+    handleResultValidation();
+}
 
     if (emptyCells.length === 0) return;
 
@@ -120,3 +172,4 @@ function handleRestartGame() {
     statusDisplay.innerHTML = currentPlayerTurn();
     cells.forEach(cell => cell.innerHTML = "");
 }
+
