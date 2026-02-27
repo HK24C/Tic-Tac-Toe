@@ -1,41 +1,19 @@
 const statusDisplay = document.querySelector(".game-status");
+const cells = document.querySelectorAll(".cell");
+const restartButton = document.querySelector(".game-restart");
 
 let gameActive = true;
-
-let currentPlayer = "X";
-
-let gameState = ["", "", "", "", "", "","", "", ""];
+let currentPlayer = "O"; // Human starts
+let gameState = ["", "", "", "", "", "", "", "", ""];
 
 const winningMessage = () => `Player ${currentPlayer} has won!`;
-
 const drawMessage = () => `Game ended in a draw!`;
-
 const currentPlayerTurn = () => `It's ${currentPlayer}'s turn`;
 
 statusDisplay.innerHTML = currentPlayerTurn();
 
-document.querySelectorAll('.cell').forEach(cell => cell.addEventListener('click', handleCellClick));
-
-document.querySelector('.game-restart').addEventListener('click', handleRestartGame);
-
-function handleCellClick(clickedCellEvent) {
-    const clickedCell = clickedCellEvent.target;
-    const clickedCellIndex = parseInt(
-        clickedCell.getAttribute('data-cell-index')
-    );
-
-    if(gameState[clickedCellIndex] !== "" || !gameActive) {
-        return;
-    }
-
-    handleCellPlayed(clickedCell, clickedCellIndex);
-    handleResultValidation();
-}
-
-function handleCellPlayed(clickedCell, clickedCellIndex){
-    gameState[clickedCellIndex] = currentPlayer;
-    clickedCell.innerHTML = currentPlayer;
-}
+cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+restartButton.addEventListener('click', handleRestartGame);
 
 const winningConditions = [
     [0, 1, 2],
@@ -48,51 +26,97 @@ const winningConditions = [
     [2, 4, 6]
 ];
 
+function handleCellClick(clickedCellEvent) {
+
+    // Only allow human (O) to click
+    if (currentPlayer !== "O" || !gameActive) return;
+
+    const clickedCell = clickedCellEvent.target;
+    const clickedCellIndex = parseInt(
+        clickedCell.getAttribute('data-cell-index')
+    );
+
+    if (gameState[clickedCellIndex] !== "") return;
+
+    handleCellPlayed(clickedCell, clickedCellIndex);
+    handleResultValidation();
+}
+
+function handleCellPlayed(clickedCell, clickedCellIndex) {
+    gameState[clickedCellIndex] = currentPlayer;
+    clickedCell.innerHTML = currentPlayer;
+}
+
 function handleResultValidation() {
+
     let roundWon = false;
-    for(let i =0; i<=7;i++) {
+
+    for (let i = 0; i < winningConditions.length; i++) {
         const winCondition = winningConditions[i];
         let a = gameState[winCondition[0]];
         let b = gameState[winCondition[1]];
         let c = gameState[winCondition[2]];
 
-        if(a === '' || b === '' || c === ''){
-            continue;
-        }
-        if(a === b && b == c){
+        if (a === '' || b === '' || c === '') continue;
+
+        if (a === b && b === c) {
             roundWon = true;
-            break
+            break;
         }
     }
 
-    if(roundWon) {
+    if (roundWon) {
         statusDisplay.innerHTML = winningMessage();
         gameActive = false;
         return;
     }
 
+    let roundDraw = !gameState.includes("");
 
-let roundDraw = !gameState.includes("");
-if(roundDraw) {
-    statusDisplay.innerHTML = drawMessage();
-    gameActive = false;
-    return;
-}
+    if (roundDraw) {
+        statusDisplay.innerHTML = drawMessage();
+        gameActive = false;
+        return;
+    }
 
-handlePlayerChange();
-
+    handlePlayerChange();
 }
 
 function handlePlayerChange() {
-    currentPlayer = currentPlayer === "X" ? "0" : "X";
+    currentPlayer = currentPlayer === "O" ? "X" : "O";
     statusDisplay.innerHTML = currentPlayerTurn();
+
+    // If it's AI turn → make automatic move
+    if (currentPlayer === "X" && gameActive) {
+        setTimeout(makeAutomaticMove, 500);
+    }
 }
 
-function handleRestartGame(){
+function makeAutomaticMove() {
+
+    let emptyCells = [];
+
+    for (let i = 0; i < gameState.length; i++) {
+        if (gameState[i] === "") {
+            emptyCells.push(i);
+        }
+    }
+
+    if (emptyCells.length === 0) return;
+
+    // Random selection
+    let randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+
+    let cell = document.querySelector(`[data-cell-index='${randomIndex}']`);
+
+    handleCellPlayed(cell, randomIndex);
+    handleResultValidation();
+}
+
+function handleRestartGame() {
     gameActive = true;
-    currentPlayer = "X";
+    currentPlayer = "O";
     gameState = ["", "", "", "", "", "", "", "", ""];
     statusDisplay.innerHTML = currentPlayerTurn();
-    document.querySelectorAll('.cell')
-                .forEach(cell => cell.innerHTML = ""); 
+    cells.forEach(cell => cell.innerHTML = "");
 }
